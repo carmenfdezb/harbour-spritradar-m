@@ -71,13 +71,12 @@ console.log(e.message)
 
     function getItems( lat, lng ) {
         var req = new XMLHttpRequest()
+        var url = "https://creativecommons.tankerkoenig.de/json/list.php?sort=dist&lat="+lat+"&lng="+lng+"&rad="+searchRadius+"&type="+type+"&apikey="+tankerkoenig_apikey
         req.open( "GET", "https://creativecommons.tankerkoenig.de/json/list.php?sort=dist&lat="+lat+"&lng="+lng+"&rad="+searchRadius+"&type="+type+"&apikey="+tankerkoenig_apikey )
         req.onreadystatechange = function() {
             if( req.readyState == 4 ) {
                 try {
-                    //console.log( req.responseText )
                     var x = JSON.parse( req.responseText )
-
                     x = x.stations
                     for( var i = 0; i < x.length; i++ ) {
                        var o = x[i]
