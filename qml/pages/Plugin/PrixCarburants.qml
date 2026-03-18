@@ -6,14 +6,20 @@ Plugin {
     id: page
 
     name: "FR - Prix Carburants"
-    description: "https://www.prix-carburants.gouv.fr/"
+    description: "https://www.prix-carburants.2aaz.fr/"
     units: { "currency":"€", "distance": "km" }
     countryCode: "fr"
-    property string url: "http://harbour-spritradar-fork.w4f.eu/fr/"
+    //property string url: "http://harbour-spritradar-fork.w4f.eu/fr/"
+    property string url: "https://api.prix-carburants.2aaz.fr"
     type: "e10"
-    types: ["Gazole", "SP95", "E10", "E85", "GPLc", "SP98"]
+    types: ["Gazole", "SP95", "SP95-E10", "E85", "GPLc", "SP98"]
     names: [qsTr("Gazole"), qsTr("SP95"), qsTr("E10"), qsTr("E85"), qsTr("GPLc"), qsTr("SP98")]
 
+    function betweenHours(h0, h1) {
+      var now = new Date();
+      var mins = now.getHours()*60 + now.getMinutes();
+      return toMins(h0) <= mins && mins <= toMins(h1);
+    }
     settings: Settings {
         name: "PrixCarburants"
 
@@ -64,26 +70,47 @@ console.log(e.message)
         itemsBusy = true
         items.clear()
         coverItems.clear()
+        var now = new Date()
+        var day = now.getDay()
         var req = new XMLHttpRequest()
-        req.open( "GET", url+"?get=stations&lat="+lat+"&lng="+lng+"&radius="+searchRadius )
+        // search radius is now via a header  -H 'Range: m=5000-7000'
+        req.open( "GET", url+"/stations/around/"+lat+","+lng+"?types=,R,A&responseFields=Fuels,Price,Hours")
+        req.setRequestHeader("accept", "application/json")
+        req.setRequestHeader("Range", "m=100-"+searchRadius*1000)
         req.onreadystatechange = function() {
             if( req.readyState == 4 ) {
                 try {
                     var x = JSON.parse( req.responseText )
                     for( var i = 0; i < x.length; i++ ) {
                         var o = x[i]
-                        var price = { price:0 }
-                        for( var j = 0; j < o.prices.length; j++ ) {
-                            if( o.prices[j].id == type ) price = o.prices[j]
+                        var price = 0
+                        var open = false
+
+                        console.log(o.type)
+
+                        for( var j = 0; j < o.Fuels.length; j++ ) {
+                            if( o.Fuels[j]["shortName"] == type ) {
+                                price = o.Fuels[j]["Price"]["value"]
+                            }
                         }
-                        if( price.price == 0 ) continue
+                        try {
+                            if( o.Hours["Days"][day-1]["status"] == "open" ) {
+                                open = true
+                            }
+                        } catch(e) {
+                            console.log(e.message)
+                        }
+
+                        //if( price == 0 || open == false) continue
+                        if( price == 0 ) continue
+
                         var itm = {
                             "stationID": o.id,
-                            "stationName": o.adresse,
-                            "stationPrice": price.price,
-                            "stationAdress": o.adresse,
-                            "stationDistance": o.distance*1000,
-                            "customMessage": false
+                            "stationName": o["Brand"]["name"],
+                            "stationPrice": price,
+                            "stationAdress": o["Address"]["street_line"],
+                            "stationDistance": o.distance,
+                            "customMessage": !open?qsTr("Closed"):qsTr("Open")
                         }
                         items.append( itm )
                     }
@@ -102,42 +129,79 @@ console.log(e.message)
         req.send()
     }
 
-    function requestStation( id ) {
+    function requestStation( id, stationName ) {
         stationBusy = true
         station = {}
         stationPage = pageStack.push( "../GasStation.qml", {stationId:id} )
         var req = new XMLHttpRequest()
-        req.open( "GET", url+"?get=station&id="+id )
+        req.open( "GET", url+"/station/"+id+"?opendata=v1" )
+        req.setRequestHeader("accept", "application/json")
         req.onreadystatechange = function() {
             if( req.readyState == 4 ) {
                 try {
                     var st = JSON.parse( req.responseText )
-                    var price = []; var service = []
-                    for( var j = 0; j < st.prices.length; j++ ) {
+                    //console.log( JSON.stringify(st))
+                    var price = []; var service = []; var days = [];
+                    /*for( var j = 0; j < st.prices.length; j++ ) {
                         try {
                             price[price.length] = { "title":qsTr(names[types.indexOf(st.prices[j].id)]), "price":st.prices[j].price, "sz":Theme.fontSizeLarge, "tf":true }
                            } catch( ex ) {
                             console.log( JSON.stringify(st))
                         }
+                    }*/
+                    for( var j = 0; j < st.prix.length; j++ ) {
+                        try {
+                            price[price.length] =  {
+                                "title":st.prix[j]["nom"],
+                                "price":st.prix[j]["valeur"],
+                                "sz":Theme.fontSizeLarge,  "tf":true }
+                           } catch( ex ) {
+                            console.log( JSON.stringify(price))
+                        }
                     }
-                    for( j = 0; j < st.services.length; j++ ) {
-                        service[service.length] = { title:"",text:st.services[j] }
+
+                    /*for(var j = 0; j < st["Services"].length; j++ ) {
+                        var entry  = { title:"", text:st["Services"][j] }
+                        service.push(entry)
+                    }*/
+                    var optimes = []
+                    if ( st["horaires"]["automate-24-24"] && st["horaires"]["automate-24-24"] ==="1") {
+                       optimes = [ {title:qsTr("Daily") , text:"00.00-23.59"} ]
+                    } else {
+                        for( var i = 0; i < 7; i++ ) {
+                            try {
+                                optimes[optimes.length] =  {
+                                    "title":st["horaires"]["jour"][i].nom,
+                                    "text":
+                                    st["horaires"]["jour"][i].horaire[0]["ouverture"] + " - " + st["horaires"]["jour"][i].horaire[0]["fermeture"],
+                                     }
+                               } catch( ex ) {
+                                console.log( JSON.stringify(optimes))
+                            }
+                        }
+                     /*optimes = [
+                                 { title:qsTr("Daily"),
+                                 "text":st["horaires"]["jour"][0].horaire["ouverture"]+"-"+st["horaires"]["jour"][0].horaire["fermeture"] ,
+                                  title:qsTr("Except"), "text": "-" }
+                     ]*/
                     }
-                    var optimes = st.openingtimes.length>0?[ {title:qsTr("Daily"), "text":st.openingtimes[0].from+"-"+st.openingtimes[0].to }, {title:qsTr("Except"), "text":st.openingtimes[0].except?st.openingtimes[0].except:"-" } ]: []
+
+                    console.log( JSON.stringify(st["horaires"]))
+
                     station = {
+                       "stationName": stationName, //st["id"],
                         "stationID":st.id,
-                        "stationName":st.adresse,
                         "stationAdress": {
                             "street": st.adresse,
-                            "county":st.ville,
+                            "county": st.ville,
                             "country":"",//country,
-                            "latitude":st.latitude,
-                            "longitude":st.longitude
+                            "latitude":st["latitude"],
+                            "longitude":st["longitude"],
                         },
                         "content": [
-                            { "title":qsTr("Opening times"), "items":optimes },
                             { "title":qsTr("Prices"), "items": price },
-                            { "title":qsTr("Services"), "items": service },
+                            { "title":qsTr("Opening times"), "items":optimes },
+                            //{ "title":qsTr("Services"), "items": service },
                         ]
                     }
                 }
@@ -155,15 +219,21 @@ console.log(e.message)
 
     function getPriceForFav( id ) {
         var req = new XMLHttpRequest()
-        req.open( "GET", url+"?get=station&id="+id )
+        req.open( "GET", url+"/station/"+id )
+        req.setRequestHeader("accept", "application/json")
         req.onreadystatechange = function() {
             if( req.readyState == 4 ) {
                 try {
-                    var o = JSON.parse( req.responseText )
                     var price = 0
-                        for( var j = 0; j < o.prices.length; j++ ) {
-                            if( o.prices[j].id == type ) price = o.prices[j].price
+                    var st = JSON.parse( req.responseText )
+                    for( var j = 0; j < st.Fuels.length; j++ ) {
+                        try {
+                            price = st.Fuels[j]["Price"].value;
+
+                           } catch( ex ) {
+                            console.log( JSON.stringify(st))
                         }
+                    }
                     if( price == 0) return
                     setPriceForFav( id, price )
                 }

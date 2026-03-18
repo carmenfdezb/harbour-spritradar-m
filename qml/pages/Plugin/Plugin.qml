@@ -109,17 +109,20 @@ Dialog {
         items.clear()
         coverItems.clear()
     }
+
     function getItemsByAddress(callback) {
         var req = new XMLHttpRequest()
-        req.open( "GET", "https://nominatim.openstreetmap.org/search?q="+address+"&format=json&limit=1&accept-language="+countryCode+"&countrycodes="+countryCode )
-        req.setRequestHeader("user-agent", "harbour-spritradar/2.11")
+        // var url =  "https://nominatim.openstreetmap.org/search?q="+address+"&format=json&limit=1&accept-language="+countryCode+"&countrycodes="+countryCode
+        var url = "https://geosearch.meteoplaza.com/v3/weerplaza/search?search="+address+"&limit=1"
+        req.open( "GET", url)
+        req.setRequestHeader("User-Agent", "harbour-spritradar/2.11")
         req.setRequestHeader("referer", "harbour-spritradar/2.11")
         req.onreadystatechange = function() {
             if( req.readyState == 4 && !useGps ) {
                 try {
                     var x = JSON.parse( req.responseText )
-                    address = x[0].display_name
-                    callback( x[0].lat, x[0].lon )
+                    address = x[0].name
+                    callback( x[0].latitude, x[0].longitude )
                 }
                 catch(e) {
 console.log(e.message)

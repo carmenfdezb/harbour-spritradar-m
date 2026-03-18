@@ -68,6 +68,7 @@ Plugin {
         items.clear()
         coverItems.clear()
         var req = new XMLHttpRequest()
+        console.log(url)
         req.open( "POST", url )
         req.setRequestHeader("Accept", "application/json" )
         req.setRequestHeader("Content-Type", "application/json" )

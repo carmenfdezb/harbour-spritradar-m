@@ -68,7 +68,9 @@ console.log(e.message)
 
     function getItems( lat, lng ) {
         var req = new XMLHttpRequest()
-        req.open( "GET", url+"?latitude="+lat+"&longitude="+lng+"&fuelType="+type+"&includeClosed="+(contentItem.hideClosed? "false" : "true") )
+        // DIE SUP GAS
+        var uri =  url+"?latitude="+lat+"&longitude="+lng+"&fuelType="+type+"&includeClosed="+(contentItem.hideClosed? "false" : "true")
+        req.open( "GET", uri)
         req.onreadystatechange = function() {
             if( req.readyState == 4 ) {
                 try {

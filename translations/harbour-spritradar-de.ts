@@ -275,16 +275,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Except</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Prices</source>
         <translation type="unfinished">Preise</translation>
-    </message>
-    <message>
-        <source>Services</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Gazole</source>
@@ -309,6 +301,14 @@
     <message>
         <source>E10</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Closed</source>
+        <translation type="unfinished">Geschlossen</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation type="unfinished">Geöffnet</translation>
     </message>
 </context>
 <context>

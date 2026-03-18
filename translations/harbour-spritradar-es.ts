@@ -295,10 +295,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Except</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Opening times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -307,8 +303,12 @@
         <translation>Precios</translation>
     </message>
     <message>
-        <source>Services</source>
-        <translation type="unfinished"></translation>
+        <source>Closed</source>
+        <translation type="unfinished">Cerrado</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation type="unfinished">Abierto</translation>
     </message>
 </context>
 <context>

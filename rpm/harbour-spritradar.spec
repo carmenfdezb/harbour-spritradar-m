@@ -6,6 +6,7 @@
 Name:       harbour-spritradar
 
 # >> macros
+%define _binary_payload w2.xzdio
 # << macros
 
 %{!?qtc_qmake:%define qtc_qmake %qmake}
@@ -14,11 +15,11 @@ Name:       harbour-spritradar
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 
 Summary:    A Gas price comparison app
-Version:    0.2.1
+Version:    0.2.5
 Release:    1
 Group:      Qt/Qt
 License:    MIT
-URL:        https://github.com/poetaster/SailGo
+URL:        https://github.com/poetaster/harbour-spritradar
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   sailfishsilica-qt5 >= 0.10.9
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
